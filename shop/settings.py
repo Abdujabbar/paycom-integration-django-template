@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'paycom',
+    'orders',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -122,3 +124,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+PAYCOM_API_LOGIN = "Paycom"
+PAYCOM_API_KEY = 'QwHZV22EhpHxsU9z6jzEw7p23k?hzABStV9N'
+PAYCOM_MERCHANT_ID = '5b83d5518f69a5f3ffff5394'
