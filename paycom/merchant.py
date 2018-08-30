@@ -13,14 +13,18 @@ class Merchant(object):
     def authorize(self):
 
         if not 'HTTP_AUTHORIZATION' in self.request.META:
-            raise PaycomException()
+            raise PaycomException(
+                "UNAUTHENTICATED"
+            )
 
         basic = self.request.META['HTTP_AUTHORIZATION']
         password = str(basic.replace("Basic", "")).strip()
         decoded = base64.b64decode(password)
 
         if self.generate_pair_login_pass().encode() != decoded:
-            raise PaycomException()
+            raise PaycomException(
+                "UNAUTHENTICATED"
+            )
 
         return True
 
