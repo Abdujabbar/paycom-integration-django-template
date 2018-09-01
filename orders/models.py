@@ -1,5 +1,5 @@
 from django.db import models
-
+from paycom.exceptions import PaycomException
 # Create your models here.
 class Order(models.Model):
     ORDER_ON_WAIT = 1
@@ -29,4 +29,13 @@ class Order(models.Model):
     def cancel(self):
         self.state = self.ORDER_CANCELLED
         self.save()
+
+    @staticmethod
+    def find_by_pk(pk):
+        try:
+            order = Order.objects.get(pk)
+            return order
+        except Order.ObjectDoesNotExist as e:
+            raise PaycomException("ORDER_NOT_FOUND")
+
 

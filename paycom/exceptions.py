@@ -37,6 +37,41 @@ class PaycomException(Exception):
             "ru": "Транзакция не найдена",
             "uz": "Tranzaksiya topilmadi",
             "en": "Transaction not found"
+        },
+        "NOT_ALLOWED_METHOD":{
+            "ru":"Метод не доступен",
+            "uz":"Metoddan foydalanish mumkin emas ",
+            "en":"Not allowed method",
+        },
+        "JSON_PARSE": {
+            "ru": "Ошибка при парсинге JSON",
+            "uz": "JSON ni parse qilishdagi xatolik",
+            "en": "Json parse error"
+        },
+        "WRONG_REQUEST_PARAMS": {
+            "ru": "Были переданы не правильные параметры",
+            "uz": "Noto'g'ri parametrlar jo'natildi",
+            "en": "Wrong request params"
+        },
+        "METHOD_NOT_EXIST": {
+            "ru": "Метод не найден",
+            "uz": "Metod topilmadi",
+            "en": "Method not exists"
+        },
+        "SYSTEM_ERROR": {
+            "ru": "Системная ошибка",
+            "uz": "Tizim xatoligi",
+            "en": "System error"
+        },
+        "ORDER_NOT_FOUND": {
+            "ru": "Заказ не найден",
+            "uz": "Zakaz topilmadi",
+            "en": "Order not found"
+        },
+        "ORDER_ALREADY_PAYED": {
+            "ru": "Заказ уже проплачен",
+            "uz": "Zakaz to'langan",
+            "en": "Order already payed"
         }
     }
 
