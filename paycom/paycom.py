@@ -67,7 +67,7 @@ class Paycom(object):
 
         if self.params['method'] == "GetStatement":
             return {
-                "result": Transaction.between(self.params['from'], self.params['to'])
+                "result": self.get_statement()
             }
 
     def check_perform_transaction(self):
