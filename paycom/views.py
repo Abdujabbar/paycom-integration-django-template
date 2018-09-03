@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .paycom import Paycom
 from .exceptions import PaycomException
@@ -14,15 +13,18 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 def index(request):
     paycom = Paycom(request)
     try:
-        output = paycom.launch()
-        return Response(output)
+        response = paycom.launch()
     except PaycomException as e:
-        return Response({
-            "id": paycom.params['id'],
+        response = {
             "result": "",
             "error": {
                 "code": e.ERRORS_CODES[e.code],
                 "message": e.message,
                 "data": ""
             }
-        })
+        }
+
+        if 'id' in paycom.params:
+            response['id'] = paycom.params['id']
+
+    return Response(response)

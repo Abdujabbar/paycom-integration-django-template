@@ -13,6 +13,7 @@ class Paycom(object):
         self.params = json.loads(request.body.decode('utf-8'))
 
     def launch(self):
+
         self.merchant.authorize()
 
         if self.params['method'] == "CheckPerformTransaction" and self.check_perform_transaction():
@@ -72,15 +73,20 @@ class Paycom(object):
 
     def check_perform_transaction(self):
 
-        if 'order_id' not in self.params['account']:
+        if 'order_id' not in self.params['params']['account']:
             raise PaycomException("ORDER_NOT_FOUND")
 
-        order = Order.find_by_pk(self.params['account']['order_id'])
+        order = Order.find_by_pk(self.params['params']['account']['order_id'])
+
 
         if order.is_payed():
             raise PaycomException("ORDER_ALREADY_PAYED")
 
-        if self.params['amount'] != order.amount:
+        if not order.on_wait():
+            raise PaycomException("ORDER_CANCELLED")
+
+
+        if self.params['params']['amount'] != order.amount:
             raise PaycomException("AMOUNTS_NOT_EQUALS")
 
         return True
@@ -129,9 +135,7 @@ class Paycom(object):
 
             order = Order.find_by_pk(self.params['account']['order_id'])
             order.set_payed()
-            transaction.state = Transaction.STATE_PAYED
-            transaction.perform_time = time_now_in_ms()
-            transaction.save()
+            transaction.set_payed()
             return transaction
 
         except Exception as e:

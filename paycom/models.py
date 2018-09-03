@@ -67,6 +67,11 @@ class Transaction(models.Model):
         self.reason = reason
         return self.save()
 
+    def set_payed(self):
+        self.state = Transaction.STATE_PAYED
+        self.perform_time = time_now_in_ms()
+        self.save()
+
     @classmethod
     def between(cls, from_date, to_date):
         return Transaction.objects.filter(create_time__gte=from_date, create_time__lte=to_date)

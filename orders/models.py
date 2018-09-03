@@ -33,9 +33,9 @@ class Order(models.Model):
     @staticmethod
     def find_by_pk(pk):
         try:
-            order = Order.objects.get(pk)
+            order = Order.objects.get(pk=pk)
             return order
-        except Order.ObjectDoesNotExist as e:
+        except models.ObjectDoesNotExist as e:
             raise PaycomException("ORDER_NOT_FOUND")
 
 
