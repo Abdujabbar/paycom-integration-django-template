@@ -7,33 +7,32 @@ import json
 
 
 class Paycom(object):
-
     def __init__(self, request):
         self.merchant = MerchantFactory.create_merchant(request)
-        self.params = json.loads(request.body.decode('utf-8'))
+        body = json.loads(request.body.decode('utf-8'))
+        self.method = body['method']
+        self.params = body['params']
 
     def launch(self):
 
         self.merchant.authorize()
 
-        if self.params['method'] == "CheckPerformTransaction" and self.check_perform_transaction():
+        if self.method == "CheckPerformTransaction" and self.check_perform_transaction():
             return {
                 "result": {
                     "allow": True
                 }
             }
-
-        if self.params['method'] == "CreateTransaction":
+        elif self.method == "CreateTransaction":
             transaction = self.create_transaction()
             return {
                 "result": {
                     "created_time": transaction.create_time,
-                    "transaction": transaction.transaction,
+                    "transaction": transaction.pk,
                     "state": transaction.state,
                 }
             }
-
-        if self.params['method'] == "PerformTransaction":
+        elif self.method == "PerformTransaction":
             transaction = self.perform_transaction()
             return {
                 "result": {
@@ -42,8 +41,7 @@ class Paycom(object):
                     "state": transaction.state,
                 }
             }
-
-        if self.params['method'] == "CancelTransaction":
+        elif self.method == "CancelTransaction":
             transaction = self.cancel_transaction()
             return {
                 "result": {
@@ -52,8 +50,7 @@ class Paycom(object):
                     "state": transaction.state,
                 }
             }
-
-        if self.params['method'] == "CheckTransaction":
+        elif self.method == "CheckTransaction":
             transaction = self.check_transaction()
             return {
                 "result": {
@@ -66,18 +63,17 @@ class Paycom(object):
                 }
             }
 
-        if self.params['method'] == "GetStatement":
+        elif self.method == "GetStatement":
             return {
                 "result": self.get_statement()
             }
 
     def check_perform_transaction(self):
 
-        if 'order_id' not in self.params['params']['account']:
+        if 'order_id' not in self.params['account']:
             raise PaycomException("ORDER_NOT_FOUND")
 
-        order = Order.find_by_pk(self.params['params']['account']['order_id'])
-
+        order = Order.find_by_pk(self.params['account']['order_id'])
 
         if order.is_payed():
             raise PaycomException("ORDER_ALREADY_PAYED")
@@ -85,8 +81,7 @@ class Paycom(object):
         if not order.on_wait():
             raise PaycomException("ORDER_CANCELLED")
 
-
-        if self.params['params']['amount'] != order.amount:
+        if self.params['amount'] != order.amount:
             raise PaycomException("AMOUNTS_NOT_EQUALS")
 
         return True
@@ -133,12 +128,13 @@ class Paycom(object):
             elif transaction.is_payed():
                 return transaction
 
-            order = Order.find_by_pk(self.params['account']['order_id'])
+            order = Order.find_by_pk(transaction.order_id)
             order.set_payed()
             transaction.set_payed()
             return transaction
 
         except Exception as e:
+            print(e)
             raise PaycomException("CANNOT_PERFORM_OPERATION")
 
     def cancel_transaction(self):

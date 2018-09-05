@@ -35,7 +35,7 @@ class Order(models.Model):
         try:
             order = Order.objects.get(pk=pk)
             return order
-        except models.ObjectDoesNotExist as e:
+        except Order.DoesNotExist as e:
             raise PaycomException("ORDER_NOT_FOUND")
 
 

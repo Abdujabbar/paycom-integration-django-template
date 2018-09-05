@@ -28,13 +28,13 @@ class Transaction(models.Model):
     amount = models.IntegerField(blank=False)
     account = models.CharField(blank=False, max_length=255)
 
-    create_time = models.BigIntegerField(blank=False)
-    perform_time = models.BigIntegerField(blank=True)
-    cancel_time = models.BigIntegerField(blank=True)
+    create_time = models.BigIntegerField(blank=True, default=0)
+    perform_time = models.BigIntegerField(blank=True, default=0)
+    cancel_time = models.BigIntegerField(blank=True, default=0)
 
     transaction = models.CharField(blank=False, max_length=25)
     state = models.SmallIntegerField(blank=False)
-    reason = models.SmallIntegerField(blank=False)
+    reason = models.SmallIntegerField(blank=True, default=0)
     receivers = models.CharField(max_length=500, blank=False)
     order_id = models.IntegerField(blank=False)
 
@@ -51,7 +51,7 @@ class Transaction(models.Model):
         return self.state == self.STATE_CANCELLED_AFTER_PAYED
 
     def is_timeout(self):
-        return time_now_in_ms() - self.create_time.to_python() > self.TIMEOUT_LIMIT
+        return time_now_in_ms() - self.create_time > self.TIMEOUT_LIMIT
 
     def set_timed_out(self):
         self.reason = self.REASON_TIMEOUT_CANCEL_ERROR
@@ -79,7 +79,7 @@ class Transaction(models.Model):
     @staticmethod
     def find_by_pk(pk):
         try:
-            transaction = Transaction.objects.get(pk)
+            transaction = Transaction.objects.get(pk=pk)
             return transaction
-        except Transaction.ObjectDoesNotExist as e:
+        except Transaction.DoesNotExist as e:
             raise PaycomException("TRANSACTION_NOT_FOUND")
