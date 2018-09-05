@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
-def index(request):
+def payment_view(request):
     paycom = Paycom(request)
     try:
         response = paycom.launch()
