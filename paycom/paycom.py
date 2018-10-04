@@ -1,21 +1,50 @@
-from .factory import MerchantFactory
+from django.conf import settings
 from orders.models import Order
 from .exceptions import PaycomException
 from .models import Transaction
 from .utils import time_now_in_ms
 import json
+import base64
 
 
 class Paycom(object):
+    methods = {
+        "CheckPerformTransaction": "check_perform_transaction",
+        "CreateTransaction": "create_transaction",
+        "PerformTransaction": "perform_transaction",
+        "CancelTransaction": "cancel_transaction",
+        "CheckTransaction": "check_transaction",
+        "GetStatement": "get_statement"
+    }
+
+
     def __init__(self, request):
-        self.merchant = MerchantFactory.create_merchant(request)
         body = json.loads(request.body.decode('utf-8'))
         self.method = body['method']
         self.params = body['params']
+        self.request = request
+        self.key = settings.PAYCOM_API_KEY
+        self.login = settings.PAYCOM_API_LOGIN
+
+    def authorize(self):
+        if 'HTTP_AUTHORIZATION' not in self.request.META:
+            raise PaycomException(
+                "UNAUTHENTICATED"
+            )
+
+        basic = self.request.META['HTTP_AUTHORIZATION']
+        password = str(basic.replace("Basic", "")).strip()
+        decoded = base64.b64decode(password)
+        login_key_pair = self.login + ":" + self.key
+        if login_key_pair.encode() != decoded:
+            raise PaycomException(
+                "UNAUTHENTICATED"
+            )
+        return True
 
     def launch(self):
 
-        self.merchant.authorize()
+        self.authorize()
 
         if self.method == "CheckPerformTransaction" and self.check_perform_transaction():
             return {
