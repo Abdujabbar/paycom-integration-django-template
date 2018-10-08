@@ -1,6 +1,7 @@
 from django.db import models
 from paycom.exceptions import PaycomException
-# Create your models here.
+
+
 class Order(models.Model):
     ORDER_ON_WAIT = 1
     ORDER_IS_PAYED = 2
@@ -11,7 +12,6 @@ class Order(models.Model):
     state = models.SmallIntegerField(blank=False)
     user_id = models.IntegerField(blank=False)
     phone = models.CharField(max_length=15, blank=False)
-
 
     def on_wait(self):
         return self.state == self.ORDER_ON_WAIT
@@ -37,5 +37,3 @@ class Order(models.Model):
             return order
         except Order.DoesNotExist as e:
             raise PaycomException("ORDER_NOT_FOUND")
-
-

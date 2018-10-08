@@ -7,7 +7,6 @@ from .utils import time_now_in_ms
 import random
 
 
-# Create your tests here.
 class PaycomTest(TestCase):
     base_url = "http://localhost:8000/api/payments/paycom"
 

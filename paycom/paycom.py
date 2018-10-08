@@ -17,7 +17,6 @@ class Paycom(object):
         "GetStatement": "get_statement"
     }
 
-
     def __init__(self, request):
         body = json.loads(request.body.decode('utf-8'))
         self.method = body['method']
@@ -45,60 +44,10 @@ class Paycom(object):
     def launch(self):
 
         self.authorize()
+        m = getattr(self, self.methods[self.method])
+        return m()
 
-        if self.method == "CheckPerformTransaction" and self.check_perform_transaction():
-            return {
-                "result": {
-                    "allow": True
-                }
-            }
-        elif self.method == "CreateTransaction":
-            transaction = self.create_transaction()
-            return {
-                "result": {
-                    "created_time": transaction.create_time,
-                    "transaction": transaction.pk,
-                    "state": transaction.state,
-                }
-            }
-        elif self.method == "PerformTransaction":
-            transaction = self.perform_transaction()
-            return {
-                "result": {
-                    "transaction": transaction.transaction,
-                    "perform_time": transaction.perform_time,
-                    "state": transaction.state,
-                }
-            }
-        elif self.method == "CancelTransaction":
-            transaction = self.cancel_transaction()
-            return {
-                "result": {
-                    "transaction": transaction.transaction,
-                    "cancel_time": transaction.cancel_time,
-                    "state": transaction.state,
-                }
-            }
-        elif self.method == "CheckTransaction":
-            transaction = self.check_transaction()
-            return {
-                "result": {
-                    "created_time": transaction.create_time,
-                    "perform_time": transaction.perform_time,
-                    "cancel_time": transaction.cancel_time,
-                    "transaction": transaction.transaction,
-                    "state": transaction.state,
-                    "reason": transaction.reason,
-                }
-            }
-
-        elif self.method == "GetStatement":
-            return {
-                "result": self.get_statement()
-            }
-
-    def check_perform_transaction(self):
-
+    def __check_perform_transaction(self):
         if 'order_id' not in self.params['account']:
             raise PaycomException("ORDER_NOT_FOUND")
 
@@ -115,6 +64,14 @@ class Paycom(object):
 
         return True
 
+    def check_perform_transaction(self):
+        if self.__check_perform_transaction():
+            return {
+                "result": {
+                    "allow": True
+                }
+            }
+
     def create_transaction(self):
         try:
             transaction = Transaction.find_by_pk(self.params['id'])
@@ -130,21 +87,27 @@ class Paycom(object):
         except Exception as e:
             pass
 
-        self.check_perform_transaction()
+        self.__check_perform_transaction()
 
-        transaction = Transaction()
-        transaction.order_id = self.params['account']['order_id']
-        transaction.time = self.params['time']
-        transaction.transaction_id = self.params['id']
-        transaction.account = self.params['account']['phone']
-        transaction.amount = self.params['amount']
-        transaction.create_time = time_now_in_ms()
-        transaction.state = Transaction.STATE_CREATED
-        transaction.transaction = self.params['account']['order_id']
+        transaction_dict = {
+            "order_id": self.params['account']['order_id'],
+            "time": self.params['time'],
+            "transaction_id": self.params['id'],
+            "account": self.params['account']['phone'],
+            "amount": self.params['amount'],
+            "create_time": time_now_in_ms(),
+            "state": Transaction.STATE_CREATED,
+            "transaction": self.params['account']['order_id']
+        }
+        transaction = Transaction.objects.create(**transaction_dict)
 
-        transaction.save()
-
-        return transaction
+        return {
+            "result": {
+                "created_time": transaction.create_time,
+                "transaction": transaction.pk,
+                "state": transaction.state,
+            }
+        }
 
     def perform_transaction(self):
         try:
@@ -160,8 +123,14 @@ class Paycom(object):
             order = Order.find_by_pk(transaction.order_id)
             order.set_payed()
             transaction.set_payed()
-            return transaction
 
+            return {
+                "result": {
+                    "transaction": transaction.transaction,
+                    "perform_time": transaction.perform_time,
+                    "state": transaction.state,
+                }
+            }
         except Exception as e:
             print(e)
             raise PaycomException("CANNOT_PERFORM_OPERATION")
@@ -171,14 +140,33 @@ class Paycom(object):
         order = Order.find_by_pk(transaction.order_id)
         transaction.cancel(self.params['reason'])
         order.cancel()
-        return transaction
+        return {
+            "result": {
+                "transaction": transaction.transaction,
+                "cancel_time": transaction.cancel_time,
+                "state": transaction.state,
+            }
+        }
 
     def check_transaction(self):
         transaction = Transaction.find_by_pk(self.params['id'])
-        return transaction
+        return {
+            "result": {
+                "created_time": transaction.create_time,
+                "perform_time": transaction.perform_time,
+                "cancel_time": transaction.cancel_time,
+                "transaction": transaction.transaction,
+                "state": transaction.state,
+                "reason": transaction.reason,
+            }
+        }
 
     def get_statement(self):
-        return Transaction.between(self.params['from'], self.params['to'])
+        return {
+            "result": Transaction.objects.filter(create_time__gte=self.params['from'],
+                                                 create_time__lte=self.params['to'])
+
+        }
 
     def change_password(self):
         pass

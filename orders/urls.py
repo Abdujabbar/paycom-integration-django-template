@@ -5,5 +5,4 @@ router = DefaultRouter()
 
 router.register(r'^', OrderAPIView, 'orders')
 
-
 urlpatterns = router.urls

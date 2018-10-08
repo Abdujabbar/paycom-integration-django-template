@@ -3,8 +3,6 @@ from .utils import time_now_in_ms
 from .exceptions import PaycomException
 
 
-# Create your models here.
-
 class Transaction(models.Model):
     TIMEOUT_LIMIT = 43200000
 
@@ -71,10 +69,6 @@ class Transaction(models.Model):
         self.state = Transaction.STATE_PAYED
         self.perform_time = time_now_in_ms()
         self.save()
-
-    @classmethod
-    def between(cls, from_date, to_date):
-        return Transaction.objects.filter(create_time__gte=from_date, create_time__lte=to_date)
 
     @staticmethod
     def find_by_pk(pk):
